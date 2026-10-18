@@ -86,7 +86,14 @@ function useWindowWidth() {
   return w;
 }
 
-function GalleryCard({ src, alt, index, onClick }) {
+/* 未加载骨架占位比例（paddingBottom 技巧） */
+const PLACEHOLDER_RATIO = {
+  v: '150%',
+  s: '100%',
+  h: '66%'
+};
+
+function GalleryCard({ src, alt, type, index, onClick }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -104,15 +111,34 @@ function GalleryCard({ src, alt, index, onClick }) {
     return () => io.disconnect();
   }, []);
 
+  const ratio = PLACEHOLDER_RATIO[type] || PLACEHOLDER_RATIO.h;
+
   return (
-    <div ref={ref} className="gallery-card" style={{ '--d': (index % 20) * 30 + 'ms' }} onClick={() => loaded && onClick(index)}>
+    <div
+      ref={ref}
+      className="gallery-card"
+      style={{ '--d': (index % 20) * 30 + 'ms' }}
+      onClick={() => loaded && onClick(index)}
+    >
       {visible ? (
         <>
-          <img src={src} alt={alt} loading="lazy" className={loaded ? 'ok' : ''} onLoad={() => setLoaded(true)} draggable="false" />
-          {!loaded && <div className="shim" style={{ position: 'absolute', inset: 0, height: '100%', padding: 0 }} />}
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            className={loaded ? 'ok' : ''}
+            onLoad={() => setLoaded(true)}
+            draggable="false"
+          />
+          {!loaded && (
+            <div className="shim" style={{ position: 'absolute', inset: 0, height: '100%', padding: 0 }} />
+          )}
         </>
       ) : (
-        <div className="shim" style={{ position: 'relative', width: '100%', paddingBottom: alt && alt.startsWith('v') ? '150%' : '66%' }} />
+        <div
+          className="shim"
+          style={{ position: 'relative', width: '100%', paddingBottom: ratio }}
+        />
       )}
     </div>
   );
@@ -140,26 +166,34 @@ function Lightbox({ images, startIndex, onClose }) {
   }, [doClose, goN, goP]);
 
   return (
-    <div className={'lb' + (closing ? ' lb-out' : '')} onClick={doClose}
+    <div
+      className={'lb' + (closing ? ' lb-out' : '')}
+      onClick={doClose}
       onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
       onTouchEnd={(e) => {
         const d = e.changedTouches[0].clientX - touchX.current;
         if (Math.abs(d) > 60) { d > 0 ? goP() : goN(); }
-      }}>
+      }}
+    >
       <div className="lb-wrap" onClick={e => e.stopPropagation()}>
-        <img src={images[idx].src} alt={images[idx].id} className={ok ? 'lb-ok' : ''}
-          onLoad={() => setOk(true)} draggable="false" />
+        <img
+          src={images[idx].src}
+          alt={images[idx].id}
+          className={ok ? 'lb-ok' : ''}
+          onLoad={() => setOk(true)}
+          draggable="false"
+        />
         {!ok && <div className="lb-spin" />}
       </div>
       <button className="lb-nav lb-prev" onClick={e => { e.stopPropagation(); goP(); }}>
-        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
+        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <button className="lb-nav lb-next" onClick={e => { e.stopPropagation(); goN(); }}>
-        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
+        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
       </button>
       <div className="lb-count">{idx + 1} / {total}</div>
       <button className="lb-close" onClick={e => { e.stopPropagation(); doClose(); }}>
-        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
   );
@@ -173,7 +207,7 @@ function App() {
   const data = window.__GALLERY_DATA__ || {};
   const types = useMemo(() => Object.keys(data), [data]);
   const total = useMemo(
-    () => types.reduce((s, tk) => s + (data[tk]?.total || 0), 0),
+    () => types.reduce((s, tk) => s + ((data[tk] && data[tk].total) || 0), 0),
     [types, data]
   );
   const w = useWindowWidth();
@@ -181,7 +215,10 @@ function App() {
   const imgs = useMemo(() => {
     const vis = filter === 'all' ? types : [filter];
     const r = [];
-    vis.forEach(tk => (data[tk]?.images || []).forEach(img => r.push(img)));
+    vis.forEach(tk => {
+      const bucket = data[tk];
+      if (bucket && bucket.images) bucket.images.forEach(img => r.push(img));
+    });
     return r;
   }, [filter, data, types]);
 
@@ -194,7 +231,7 @@ function App() {
 
   const changeFilter = (next) => {
     setFilter(next);
-    setLbIdx(null);   // 关闭可能索引错乱的 lightbox
+    setLbIdx(null);   // 切过滤时关闭可能索引错乱的 lightbox
   };
 
   return (
@@ -214,9 +251,15 @@ function App() {
           <p className="sub">{total.toLocaleString()} {t.gallerySub}</p>
         </header>
         <nav className="fbar">
-          <button className={'fc' + (filter === 'all' ? ' on' : '')} onClick={() => changeFilter('all')}>{t.all}</button>
+          <button className={'fc' + (filter === 'all' ? ' on' : '')} onClick={() => changeFilter('all')}>
+            {t.all}
+          </button>
           {types.map(tk => (
-            <button key={tk} className={'fc' + (filter === tk ? ' on' : '')} onClick={() => changeFilter(tk)}>
+            <button
+              key={tk}
+              className={'fc' + (filter === tk ? ' on' : '')}
+              onClick={() => changeFilter(tk)}
+            >
               {tk.toUpperCase()} ({data[tk].total})
             </button>
           ))}
@@ -232,6 +275,7 @@ function App() {
                     key={item.img.id}
                     src={item.img.src}
                     alt={item.img.id}
+                    type={item.img.type}
                     index={item.index}
                     onClick={setLbIdx}
                   />

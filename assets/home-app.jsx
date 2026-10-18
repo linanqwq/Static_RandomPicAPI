@@ -31,6 +31,7 @@ const translations = {
     liveDemo: "即时 API 演示",
     horizontal: "横向图片",
     vertical: "纵向图片",
+    square: "方形图片",
     refresh: "点击重新随机",
     noTypes: "暂无图片类型 · No image types available"
   },
@@ -46,6 +47,7 @@ const translations = {
     liveDemo: "Live API Demo",
     horizontal: "Horizontal Pictures",
     vertical: "Vertical Pictures",
+    square: "Square Pictures",
     refresh: "Click to Re-roll",
     noTypes: "暂无图片类型 · No image types available"
   }
@@ -135,14 +137,15 @@ const SORTED_TYPES = [
   ...(RI_TYPES.includes('v') ? ['v'] : []),
   ...RI_TYPES.filter(x => x !== 'h' && x !== 'v').sort()
 ];
-const TYPE_LABEL_KEY = { h: 'horizontal', v: 'vertical' };
+const TYPE_LABEL_KEY = { h: 'horizontal', v: 'vertical', s: 'square' };
+const TYPE_ASPECT = { h: '16/10', v: '10/14', s: '1/1' };
 
 function getTypeLabel(type, t) {
   const key = TYPE_LABEL_KEY[type];
   return key && t[key] ? t[key] : type.toUpperCase();
 }
 
-/* React.memo：主题切换时跳过重渲染，只有 label/refreshHint 变化才更新 */
+/* React.memo：主题切换跳过重渲染；只有 label / refreshHint 变化才更新 */
 const DemoCard = React.memo(function DemoCard({ type, label, refreshHint }) {
   const [displaySrc, setDisplaySrc] = useState('');
   const [pendingSrc, setPendingSrc] = useState('');
@@ -175,8 +178,7 @@ const DemoCard = React.memo(function DemoCard({ type, label, refreshHint }) {
     setPendingSrc('');
   };
 
-  const isVertical = type === 'v';
-  const aspectRatio = isVertical ? '10/14' : '16/10';
+  const aspectRatio = TYPE_ASPECT[type] || '16/10';
 
   return (
     <div className="demo-card interactive" ref={ref} onMouseMove={onMove} onMouseLeave={onLeave}>

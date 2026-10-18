@@ -23,21 +23,20 @@ const translations = {
     back: "返回首页",
     gallery: "视觉画廊",
     gallerySub: "预览所有高品质图片资源",
-    originalSource: "原始仓库",
-    all: "全部"
+    all: "全部",
+    noImages: "暂无图片 · No images"
   },
   en: {
     back: "Back to Home",
     gallery: "Visual Gallery",
     gallerySub: "Preview all high-quality image resources",
-    originalSource: "Original Source",
-    all: "All"
+    all: "All",
+    noImages: "暂无图片 · No images"
   }
 };
 
 function useLanguage() {
   const [lang, setLang] = useState(() => {
-    // 兼容旧版存储的 'tw'，统一迁移为 'zh'
     const saved = localStorage.getItem('srp-lang');
     return saved === 'en' ? 'en' : 'zh';
   });
@@ -87,7 +86,6 @@ function useWindowWidth() {
   return w;
 }
 
-/* ── Virtualized Gallery Card (only render when visible) ── */
 function GalleryCard({ src, alt, index, onClick }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -107,14 +105,14 @@ function GalleryCard({ src, alt, index, onClick }) {
   }, []);
 
   return (
-    <div ref={ref} className="gallery-card" style={{'--d': (index % 20) * 30 + 'ms'}} onClick={() => loaded && onClick(index)}>
+    <div ref={ref} className="gallery-card" style={{ '--d': (index % 20) * 30 + 'ms' }} onClick={() => loaded && onClick(index)}>
       {visible ? (
         <>
           <img src={src} alt={alt} loading="lazy" className={loaded ? 'ok' : ''} onLoad={() => setLoaded(true)} draggable="false" />
-          {!loaded && <div className="shim" style={{position:'absolute', inset:0, height:'100%', padding:0}} />}
+          {!loaded && <div className="shim" style={{ position: 'absolute', inset: 0, height: '100%', padding: 0 }} />}
         </>
       ) : (
-        <div className="shim" style={{position:'relative', width:'100%', paddingBottom: alt && alt.startsWith('v') ? '150%' : '66%'}} />
+        <div className="shim" style={{ position: 'relative', width: '100%', paddingBottom: alt && alt.startsWith('v') ? '150%' : '66%' }} />
       )}
     </div>
   );
@@ -126,31 +124,42 @@ function Lightbox({ images, startIndex, onClose }) {
   const [ok, setOk] = useState(false);
   const touchX = useRef(0);
   const total = images.length;
+
   const goN = useCallback(() => { setIdx(i => (i + 1) % total); setOk(false); }, [total]);
   const goP = useCallback(() => { setIdx(i => (i - 1 + total) % total); setOk(false); }, [total]);
   const doClose = useCallback(() => { setClosing(true); setTimeout(onClose, 220); }, [onClose]);
+
   useEffect(() => {
-    const fn = (e) => { if (e.key === 'Escape') doClose(); if (e.key === 'ArrowRight') goN(); if (e.key === 'ArrowLeft') goP(); };
-    window.addEventListener('keydown', fn); return () => window.removeEventListener('keydown', fn);
+    const fn = (e) => {
+      if (e.key === 'Escape') doClose();
+      if (e.key === 'ArrowRight') goN();
+      if (e.key === 'ArrowLeft') goP();
+    };
+    window.addEventListener('keydown', fn);
+    return () => window.removeEventListener('keydown', fn);
   }, [doClose, goN, goP]);
+
   return (
     <div className={'lb' + (closing ? ' lb-out' : '')} onClick={doClose}
       onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
-      onTouchEnd={(e) => { const d = e.changedTouches[0].clientX - touchX.current; if (Math.abs(d) > 60) { d > 0 ? goP() : goN(); } }}>
+      onTouchEnd={(e) => {
+        const d = e.changedTouches[0].clientX - touchX.current;
+        if (Math.abs(d) > 60) { d > 0 ? goP() : goN(); }
+      }}>
       <div className="lb-wrap" onClick={e => e.stopPropagation()}>
         <img src={images[idx].src} alt={images[idx].id} className={ok ? 'lb-ok' : ''}
           onLoad={() => setOk(true)} draggable="false" />
         {!ok && <div className="lb-spin" />}
       </div>
       <button className="lb-nav lb-prev" onClick={e => { e.stopPropagation(); goP(); }}>
-        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
       </button>
       <button className="lb-nav lb-next" onClick={e => { e.stopPropagation(); goN(); }}>
-        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
       </button>
       <div className="lb-count">{idx + 1} / {total}</div>
       <button className="lb-close" onClick={e => { e.stopPropagation(); doClose(); }}>
-        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
       </button>
     </div>
   );
@@ -161,24 +170,32 @@ function App() {
   const { lang, t, toggle: toggleLang } = useLanguage();
   const [filter, setFilter] = useState('all');
   const [lbIdx, setLbIdx] = useState(null);
-  const data = window.__GALLERY_DATA__;
-  const types = Object.keys(data);
-  const total = types.reduce((s, t) => s + data[t].total, 0);
+  const data = window.__GALLERY_DATA__ || {};
+  const types = useMemo(() => Object.keys(data), [data]);
+  const total = useMemo(
+    () => types.reduce((s, tk) => s + (data[tk]?.total || 0), 0),
+    [types, data]
+  );
   const w = useWindowWidth();
 
   const imgs = useMemo(() => {
     const vis = filter === 'all' ? types : [filter];
     const r = [];
-    vis.forEach(t => data[t].images.forEach(img => r.push(img)));
+    vis.forEach(tk => (data[tk]?.images || []).forEach(img => r.push(img)));
     return r;
   }, [filter, data, types]);
 
   const columns = useMemo(() => {
     const cols = w > 1280 ? 4 : w > 860 ? 3 : w > 520 ? 2 : 1;
-    const arr = Array.from({length: cols}, () => []);
+    const arr = Array.from({ length: cols }, () => []);
     imgs.forEach((img, i) => arr[i % cols].push({ img, index: i }));
     return arr;
   }, [imgs, w]);
+
+  const changeFilter = (next) => {
+    setFilter(next);
+    setLbIdx(null);   // 关闭可能索引错乱的 lightbox
+  };
 
   return (
     <>
@@ -197,16 +214,32 @@ function App() {
           <p className="sub">{total.toLocaleString()} {t.gallerySub}</p>
         </header>
         <nav className="fbar">
-          <button className={'fc' + (filter === 'all' ? ' on' : '')} onClick={() => setFilter('all')}>{t.all}</button>
-          {types.map(tk => <button key={tk} className={'fc' + (filter === tk ? ' on' : '')} onClick={() => setFilter(tk)}>{tk.toUpperCase()} ({data[tk].total})</button>)}
-        </nav>
-        <div className="masonry-js" key={filter}>
-          {columns.map((col, cIdx) => (
-            <div key={cIdx} className="masonry-col">
-              {col.map(item => <GalleryCard key={item.img.id} src={item.img.src} alt={item.img.id} index={item.index} onClick={setLbIdx} />)}
-            </div>
+          <button className={'fc' + (filter === 'all' ? ' on' : '')} onClick={() => changeFilter('all')}>{t.all}</button>
+          {types.map(tk => (
+            <button key={tk} className={'fc' + (filter === tk ? ' on' : '')} onClick={() => changeFilter(tk)}>
+              {tk.toUpperCase()} ({data[tk].total})
+            </button>
           ))}
-        </div>
+        </nav>
+        {imgs.length === 0 ? (
+          <p style={{ textAlign: 'center', opacity: 0.4, padding: '80px 0' }}>{t.noImages}</p>
+        ) : (
+          <div className="masonry-js" key={filter}>
+            {columns.map((col, cIdx) => (
+              <div key={cIdx} className="masonry-col">
+                {col.map(item => (
+                  <GalleryCard
+                    key={item.img.id}
+                    src={item.img.src}
+                    alt={item.img.id}
+                    index={item.index}
+                    onClick={setLbIdx}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       {lbIdx !== null && <Lightbox images={imgs} startIndex={lbIdx} onClose={() => setLbIdx(null)} />}
     </>

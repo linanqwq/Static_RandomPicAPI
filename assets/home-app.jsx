@@ -31,7 +31,8 @@ const translations = {
     liveDemo: "即时 API 演示",
     horizontal: "横向图片",
     vertical: "纵向图片",
-    refresh: "重新随机图片"
+    refresh: "点击重新随机",
+    noTypes: "暂无图片类型 · No image types available"
   },
   en: {
     title: "Static Random Pic",
@@ -45,13 +46,13 @@ const translations = {
     liveDemo: "Live API Demo",
     horizontal: "Horizontal Pictures",
     vertical: "Vertical Pictures",
-    refresh: "Re-roll"
+    refresh: "Click to Re-roll",
+    noTypes: "暂无图片类型 · No image types available"
   }
 };
 
 function useLanguage() {
   const [lang, setLang] = useState(() => {
-    // 兼容旧版存储的 'tw'，统一迁移为 'zh'
     const saved = localStorage.getItem('srp-lang');
     return saved === 'en' ? 'en' : 'zh';
   });
@@ -100,8 +101,8 @@ function GlowCursor() {
     const onMove = e => { pos.x = e.clientX; pos.y = e.clientY; };
     const onHover = e => {
       const el = e.target.closest('a, button, .interactive');
-      if(dotRef.current) dotRef.current.classList.toggle('h', !!el);
-      if(ringRef.current) ringRef.current.classList.toggle('h', !!el);
+      if (dotRef.current) dotRef.current.classList.toggle('h', !!el);
+      if (ringRef.current) ringRef.current.classList.toggle('h', !!el);
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseover', onHover);
@@ -113,7 +114,11 @@ function GlowCursor() {
       af = requestAnimationFrame(loop);
     };
     loop();
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseover', onHover); cancelAnimationFrame(af); };
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseover', onHover);
+      cancelAnimationFrame(af);
+    };
   }, []);
   return (
     <>
@@ -123,14 +128,31 @@ function GlowCursor() {
   );
 }
 
-function DemoCard({ type, label }) {
+/* 模块顶层计算一次，主题/语言切换时不重算 */
+const RI_TYPES = Object.keys((typeof window !== 'undefined' && window.__COUNTS__) || {});
+const SORTED_TYPES = [
+  ...(RI_TYPES.includes('h') ? ['h'] : []),
+  ...(RI_TYPES.includes('v') ? ['v'] : []),
+  ...RI_TYPES.filter(x => x !== 'h' && x !== 'v').sort()
+];
+const TYPE_LABEL_KEY = { h: 'horizontal', v: 'vertical' };
+
+function getTypeLabel(type, t) {
+  const key = TYPE_LABEL_KEY[type];
+  return key && t[key] ? t[key] : type.toUpperCase();
+}
+
+/* React.memo：主题切换时跳过重渲染，只有 label/refreshHint 变化才更新 */
+const DemoCard = React.memo(function DemoCard({ type, label, refreshHint }) {
   const [displaySrc, setDisplaySrc] = useState('');
   const [pendingSrc, setPendingSrc] = useState('');
   const [isPreloading, setIsPreloading] = useState(false);
   const ref = useRef(null);
 
   const refresh = useCallback(() => {
-    const next = `/ri/${type}/${Math.floor(Math.random() * window.__COUNTS__[type]) + 1}.webp?t=${Date.now()}`;
+    const count = window.__COUNTS__ && window.__COUNTS__[type];
+    if (!count || count === 0) return;   // 防 NaN
+    const next = `/ri/${type}/${Math.floor(Math.random() * count) + 1}.webp?t=${Date.now()}`;
     setIsPreloading(true);
     setPendingSrc(next);
   }, [type]);
@@ -163,37 +185,30 @@ function DemoCard({ type, label }) {
         <p className="code-hint"><code>Alt: "random:{type}"</code></p>
       </div>
       <div className="demo-img-box" onClick={refresh} style={{ aspectRatio, position: 'relative', overflow: 'hidden' }}>
-        {/* Persistent Display Layer */}
         {displaySrc && (
-          <img 
-            src={displaySrc} 
-            className="ok" 
-            alt={label} 
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          <img
+            src={displaySrc}
+            className="ok"
+            alt={label}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         )}
-
-        {/* Preload Layer (Invisible) */}
         {pendingSrc && (
-          <img 
-            src={pendingSrc} 
-            onLoad={handlePendingLoad} 
-            style={{ position: 'absolute', inset: 0, opacity: 0, pointerEvents: 'none' }} 
-            alt="preloader" 
+          <img
+            src={pendingSrc}
+            onLoad={handlePendingLoad}
+            style={{ position: 'absolute', inset: 0, opacity: 0, pointerEvents: 'none' }}
+            alt="preloader"
           />
         )}
-
-        {/* Initial Loading Shim */}
         {!displaySrc && <div className="shim" />}
-
         {isPreloading && <div className="shim" style={{ opacity: 0.4 }} />}
-
         <div className="shine" />
-        <div className="refresh-hint">Click to Re-roll</div>
+        <div className="refresh-hint">{refreshHint}</div>
       </div>
     </div>
   );
-}
+});
 
 function HomeApp() {
   const { theme, toggle: toggleTheme } = useTheme();
@@ -238,12 +253,21 @@ function HomeApp() {
 
         <section className="live-demo">
           <h2 className="section-title">{t.liveDemo}</h2>
-          <div className="demo-stack">
-            <DemoCard type="h" label={t.horizontal} />
-            <div className="v-card-wrap">
-              <DemoCard type="v" label={t.vertical} />
+          {SORTED_TYPES.length === 0 ? (
+            <p style={{ textAlign: 'center', opacity: 0.4, padding: '40px 0' }}>{t.noTypes}</p>
+          ) : (
+            <div className="demo-stack">
+              {SORTED_TYPES.map(type => (
+                <div key={type} className={type === 'v' ? 'v-card-wrap' : ''}>
+                  <DemoCard
+                    type={type}
+                    label={getTypeLabel(type, t)}
+                    refreshHint={t.refresh}
+                  />
+                </div>
+              ))}
             </div>
-          </div>
+          )}
         </section>
       </div>
     </>

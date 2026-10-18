@@ -89,6 +89,7 @@ function ThemeToggle({ theme, toggle }) {
     </button>
   );
 }
+
 function GlowCursor() {
   const dotRef = useRef(null);
   const ringRef = useRef(null);
@@ -127,7 +128,7 @@ function DemoCard({ type, label }) {
   const [pendingSrc, setPendingSrc] = useState('');
   const [isPreloading, setIsPreloading] = useState(false);
   const ref = useRef(null);
-  
+
   const refresh = useCallback(() => {
     const next = `/ri/${type}/${Math.floor(Math.random() * window.__COUNTS__[type]) + 1}.webp?t=${Date.now()}`;
     setIsPreloading(true);
@@ -171,7 +172,7 @@ function DemoCard({ type, label }) {
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
           />
         )}
-        
+
         {/* Preload Layer (Invisible) */}
         {pendingSrc && (
           <img 
@@ -184,9 +185,9 @@ function DemoCard({ type, label }) {
 
         {/* Initial Loading Shim */}
         {!displaySrc && <div className="shim" />}
-        
+
         {isPreloading && <div className="shim" style={{ opacity: 0.4 }} />}
-        
+
         <div className="shine" />
         <div className="refresh-hint">Click to Re-roll</div>
       </div>
@@ -202,7 +203,6 @@ function HomeApp() {
     <>
       <GlowCursor />
 
-
       <div className="nav-group-right">
         <LanguageToggle lang={lang} toggle={toggleLang} />
         <ThemeToggle theme={theme} toggle={toggleTheme} />
@@ -217,20 +217,19 @@ function HomeApp() {
               <span>{t.viewGallery}</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
-            <a href="https://github.com/linanqwq/Static_RandomPicAPI" className="btn-secondary interactive">
+            <a href="https://github.com/linanqwq/Static_RandomPicAPI" target="_blank" rel="noopener noreferrer" className="btn-secondary interactive">
               <span>{t.githubCore}</span>
             </a>
-            </a>
-            <a href="https://gitee.com/linanqwq/Static_RandomPicAPI" className="btn-secondary interactive">
+            <a href="https://gitee.com/linanqwq/Static_RandomPicAPI" target="_blank" rel="noopener noreferrer" className="btn-secondary interactive">
               <span>{t.giteeCore}</span>
             </a>
-            <a href="https://github.com/typelin/Static_RandomPicAPI" target="_blank" className="btn-secondary interactive">
+            <a href="https://github.com/typelin/Static_RandomPicAPI" target="_blank" rel="noopener noreferrer" className="btn-secondary interactive">
               <span>{t.originalSource}</span>
             </a>
           </div>
           <p className="hero-note" style={{ marginTop: '24px', opacity: 0.5, fontSize: '0.9rem' }}>{t.myChanges}</p>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-            <a href="https://typelin.pages.dev/#footer" target="_blank" className="btn-secondary interactive">
+            <a href="https://typelin.pages.dev/#footer" target="_blank" rel="noopener noreferrer" className="btn-secondary interactive">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
               <span>{t.contactMe}</span>
             </a>

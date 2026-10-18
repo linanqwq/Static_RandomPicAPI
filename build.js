@@ -301,7 +301,7 @@ function createGalleryHtml(counts, config) {
     });
 
     const html = `<!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -391,7 +391,7 @@ function createDemoHtml(counts) {
     const etherCode = fs.readFileSync(path.join(ROOT, 'assets', 'liquid-ether-engine.js'), 'utf8');
 
     const html = `<!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">

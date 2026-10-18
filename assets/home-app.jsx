@@ -19,22 +19,20 @@ function useTheme() {
 }
 
 const translations = {
-  tw: {
-
-    title: "靜態隨機圖片",
-    subtitle: "高品質、極致優化的圖片分發服務",
-    viewGallery: "進入畫廊",
-    githubCore: "本項目 GitHub",
-    originalSource: "原項目 GitHub",
-    myChanges: "優化項目：全新視覺畫廊、亮暗主題切換、國際化多語系支援，以及極致平滑的 UI/UX 優化。",
-    contactMe: "聯絡我",
-    liveDemo: "即時 API 演示",
-    horizontal: "橫向圖片",
-    vertical: "直向圖片",
-    refresh: "重骰圖片"
+  zh: {
+    title: "静态随机图片",
+    subtitle: "高品质、极致优化的图片分发服务",
+    viewGallery: "进入画廊",
+    githubCore: "本项目 GitHub",
+    originalSource: "原项目 GitHub",
+    myChanges: "优化项目：全新视觉画廊、亮暗主题切换、国际化多语言支持，以及极致平滑的 UI/UX 优化。",
+    contactMe: "联系我",
+    liveDemo: "即时 API 演示",
+    horizontal: "横向图片",
+    vertical: "纵向图片",
+    refresh: "重新随机图片"
   },
   en: {
-
     title: "Static Random Pic",
     subtitle: "A premium, highly-optimized image delivery service",
     viewGallery: "View Gallery",
@@ -50,10 +48,14 @@ const translations = {
 };
 
 function useLanguage() {
-  const [lang, setLang] = useState(localStorage.getItem('srp-lang') || 'tw');
+  const [lang, setLang] = useState(() => {
+    // 兼容旧版存储的 'tw'，统一迁移为 'zh'
+    const saved = localStorage.getItem('srp-lang');
+    return saved === 'en' ? 'en' : 'zh';
+  });
   const t = translations[lang];
   const toggle = () => {
-    const next = lang === 'tw' ? 'en' : 'tw';
+    const next = lang === 'zh' ? 'en' : 'zh';
     setLang(next);
     localStorage.setItem('srp-lang', next);
     window.dispatchEvent(new CustomEvent('langchange', { detail: next }));
@@ -69,7 +71,7 @@ function useLanguage() {
 function LanguageToggle({ lang, toggle }) {
   return (
     <button className="nav-btn nav-btn-lang interactive" onClick={toggle} title="Switch Language">
-      <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{lang === 'tw' ? 'EN' : '繁'}</span>
+      <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{lang === 'zh' ? 'EN' : '简'}</span>
     </button>
   );
 }

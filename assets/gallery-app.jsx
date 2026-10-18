@@ -19,11 +19,11 @@ function useTheme() {
 }
 
 const translations = {
-  tw: {
-    back: "返回首頁",
-    gallery: "視覺畫廊",
-    gallerySub: "預覽所有高品質圖片資源",
-    originalSource: "原始倉庫",
+  zh: {
+    back: "返回首页",
+    gallery: "视觉画廊",
+    gallerySub: "预览所有高品质图片资源",
+    originalSource: "原始仓库",
     all: "全部"
   },
   en: {
@@ -36,10 +36,14 @@ const translations = {
 };
 
 function useLanguage() {
-  const [lang, setLang] = useState(localStorage.getItem('srp-lang') || 'tw');
+  const [lang, setLang] = useState(() => {
+    // 兼容旧版存储的 'tw'，统一迁移为 'zh'
+    const saved = localStorage.getItem('srp-lang');
+    return saved === 'en' ? 'en' : 'zh';
+  });
   const t = translations[lang];
   const toggle = () => {
-    const next = lang === 'tw' ? 'en' : 'tw';
+    const next = lang === 'zh' ? 'en' : 'zh';
     setLang(next);
     localStorage.setItem('srp-lang', next);
     window.dispatchEvent(new CustomEvent('langchange', { detail: next }));
@@ -55,7 +59,7 @@ function useLanguage() {
 function LanguageToggle({ lang, toggle }) {
   return (
     <button className="nav-btn nav-btn-lang interactive" onClick={toggle} title="Switch Language">
-      <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{lang === 'tw' ? 'EN' : '繁'}</span>
+      <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{lang === 'zh' ? 'EN' : '简'}</span>
     </button>
   );
 }

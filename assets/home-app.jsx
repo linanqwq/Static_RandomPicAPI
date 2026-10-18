@@ -24,6 +24,7 @@ const translations = {
     subtitle: "高品质、极致优化的图片分发服务",
     viewGallery: "进入画廊",
     githubCore: "本项目 GitHub",
+    giteeCore: "本项目 Gitee",
     originalSource: "原项目 GitHub",
     myChanges: "优化项目：全新视觉画廊、亮暗主题切换、国际化多语言支持，以及极致平滑的 UI/UX 优化。",
     contactMe: "联系我",
@@ -37,6 +38,7 @@ const translations = {
     subtitle: "A premium, highly-optimized image delivery service",
     viewGallery: "View Gallery",
     githubCore: "Project GitHub",
+    giteeCore: "Project Gitee",
     originalSource: "Original GitHub",
     myChanges: "Key Enhancements: New Visual Gallery, Light/Dark mode, I18n support, and premium UI/UX optimizations.",
     contactMe: "Contact Me",
@@ -215,10 +217,14 @@ function HomeApp() {
               <span>{t.viewGallery}</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
-            <a href="https://github.com/typelin/Static_RandomPicAPI" target="_blank" className="btn-secondary interactive">
+            <a href="https://github.com/linanqwq/Static_RandomPicAPI" className="btn-secondary interactive">
               <span>{t.githubCore}</span>
             </a>
-            <a href="https://github.com/afoim/Static_RandomPicAPI" target="_blank" className="btn-secondary interactive">
+            </a>
+            <a href="https://gitee.com/linanqwq/Static_RandomPicAPI" className="btn-secondary interactive">
+              <span>{t.giteeCore}</span>
+            </a>
+            <a href="https://github.com/typelin/Static_RandomPicAPI" target="_blank" className="btn-secondary interactive">
               <span>{t.originalSource}</span>
             </a>
           </div>
